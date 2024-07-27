@@ -40,30 +40,6 @@ function Invoke-LOLBASline {
 
     Import-Module powershell-yaml -ErrorAction Stop
 
-	function Clone-LOLBASRepo {
-		param (
-			[string]$Destination
-		)
-
-		# Check if git is available
-		$gitInstalled = Get-Command "git" -ErrorAction SilentlyContinue
-		if (-not $gitInstalled) {
-			Write-Warning "Git is not installed. Please install Git to use this module."
-			Write-Host "You can download Git from https://git-scm.com/downloads"
-			# Exit the script if Git is not installed
-			return $null
-		}
-
-		if (-not (Test-Path $Destination)) {
-			$RepoURL = "https://github.com/LOLBAS-Project/LOLBAS.git"
-			Write-Host "Cloning LOLBAS project to $Destination..."
-			git clone $RepoURL $Destination
-		} else {
-			Write-Host "$Destination already exists. Using existing repository."
-		}
-		return "$Destination/yml/OSBinaries"
-	}
-
     function Load-YAMLFiles {
         param (
             [string]$DirectoryPath
@@ -147,9 +123,13 @@ function Invoke-LOLBASline {
         return $Results
     }
 
-	$Path = Clone-LOLBASRepo -Destination "lolbas_repo"
+    if (!(Test-Path -Path "LOLBAS")) { 
+        Invoke-WebRequest -Uri 'https://github.com/LOLBAS-Project/LOLBAS/archive/refs/heads/master.zip' -OutFile $PWD\LOLBAS.zip
+        Expand-Archive -LiteralPath $PWD\LOLBAS.zip
+    }
+	$Path = "$PWD\LOLBAS\LOLBAS-master\yml\OSBinaries"
 	if (-not $Path) {
-		Write-Host "Unable to continue without Git. Exiting script."
+		Write-Host "Download or extraction failed. Exiting script."
 		return
 	}
 
